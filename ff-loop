@@ -3,7 +3,6 @@
 # ff-loop (C) TVDiva, GPL
 
 # Скрипт запускается в папке с видео файлами. В зависимости от имени файла, применяется фильтр.
-# Обрабатываются файлы с расширением mkv
 # Имена файлов должны иметь следующий формат:
 # NN-FILTER_NAME.mkv
 # "FILTER_NAME" должно быть между символами "-" и "." и соответствовать одному из ключей в хеше FILTER
@@ -29,7 +28,7 @@ declare -A FILTER=(
 FolderConverted="converted"
 FolderSources="sources"
 
-ls -1 *.mkv | while read InFile
+ls -1 *.{mkv,mp4,ts} | while read InFile
   do
 	test -d "$FolderConverted" || mkdir -p "$FolderConverted"
 	fName=$(echo "$InFile" | awk -F'-' '{print $2}' | awk -F'.' '{print $1}')
