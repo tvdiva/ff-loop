@@ -1,0 +1,60 @@
+#!/bin/sh
+
+# ff-loop (C) TVDiva, GPL
+
+# Скрипт запускается в папке с видео файлами. В зависимости от имени файла, применяется фильтр.
+# Обрабатываются файлы с расширением mkv
+# Имена файлов должны иметь следующий формат:
+# NN-FILTER_NAME.mkv
+# "FILTER_NAME" должно быть между символами "-" и "." и соответствовать одному из ключей в хеше FILTER
+
+# Увеличение до 1920x1080 "Россия 24"
+# Filter="-filter:v scale=1920x1080 -aspect 16:9"
+
+# Delogo для "Россия 1 HD"
+# Filter="-filter:v delogo=261:970:1406:59:0"
+
+# Без фильтров"
+# Filter=""
+
+
+r24t="54"	# "Россия 24". Отступ сверху
+r24b1="44"	# "Россия 24". Отступ снизу одинарный
+r24b2="68"	# "Россия 24". Отступ снизу двойной
+
+# r24b1		"Россия 24". Размытие, одинарная полоса снизу
+# r24b2		"Россия 24". Размытие, двойная полоса снизу
+# r24b1t	"Россия 24". Размытие, одинарная полоса снизу и полоса сверху
+# r24b2t	"Россия 24". Размытие, двойная полоса снизу и полоса сверху
+# r24t"		"Россия 24". Размытие, полоса сверху
+
+declare -A FILTER=(
+  ["r24b1"]="-filter_complex [0:v]boxblur=5[bg];[0:v]crop=iw:ih-$r24b1:0:0[fg];[bg][fg]overlay=0:0"
+  ["r24b2"]="-filter_complex [0:v]boxblur=5[bg];[0:v]crop=iw:ih-$r24b2:0:0[fg];[bg][fg]overlay=0:0"
+  ["r24b1t"]="-filter_complex [0:v]boxblur=5[bg];[0:v]crop=iw:ih-$r24t-$r24b1:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
+  ["r24b2t"]="-filter_complex [0:v]boxblur=5[bg];[0:v]crop=iw:ih-$r24t-$r24b2:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
+  ["r24t"]="-filter_complex [0:v]boxblur=5[bg];[0:v]crop=iw:ih-$r24t:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
+  )
+
+FolderConverted="converted"
+FolderSources="sources"
+
+ls -1 *.mkv | while read InFile
+  do
+	test -d "$FolderConverted" || mkdir -p "$FolderConverted"
+	fName=$(echo "$InFile" | awk -F'-' '{print $2}' | awk -F'.' '{print $1}')
+	if [[ ${FILTER[$fName]+_} ]] 
+	  then
+		Filter=${FILTER["$fName"]}
+		echo "$Filter"
+		ffmpeg -nostdin -hide_banner -i "$InFile" $Filter -vcodec huffyuv -acodec copy -y "$FolderConverted/$InFile"
+		echo "ffmpeg exit code = $?"
+		if [[ $? == 0 ]]
+    		then
+				test -d "$FolderSources" || mkdir -p "$FolderSources"
+				mv "$InFile" "$FolderSources/$InFile"
+	  		fi
+	  else
+		echo "Нет такого фильтра: $fName" | tee -a ff-loop.log
+	  fi
+  done
