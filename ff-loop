@@ -31,7 +31,7 @@ declare -A FILTER=(
 FolderConverted="converted"
 FolderSources="sources"
 
-ls -1 *.{mkv,mp4,ts} | while read InFile
+ls -1 *.{mkv,mp4,ts} 2>/dev/null | while read InFile
   do
 	test -d "$FolderConverted" || mkdir -p "$FolderConverted"
 	fName=$(echo "$InFile" | awk -F'-' '{print $2}' | awk -F'.' '{print $1}')
