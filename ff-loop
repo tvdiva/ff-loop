@@ -16,16 +16,16 @@ r24b2="68"	# "Россия 24". Отступ снизу двойной
 # r24b2		"Россия 24". Размытие, двойная полоса снизу
 # r24b1t	"Россия 24". Размытие, одинарная полоса снизу и полоса сверху
 # r24b2t	"Россия 24". Размытие, двойная полоса снизу и полоса сверху
-# r24t"		"Россия 24". Размытие, полоса сверху
-# null      Без фильтров
+# r24t		"Россия 24". Размытие, полоса сверху
+# r24null   "Россия 24", Без фильтров
 
 declare -A FILTER=(
-  ["r24b1"]="-filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24b1:0:0[fg];[bg][fg]overlay=0:0"
-  ["r24b2"]="-filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24b2:0:0[fg];[bg][fg]overlay=0:0"
-  ["r24b1t"]="-filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24t-$r24b1:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
-  ["r24b2t"]="-filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24t-$r24b2:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
-  ["r24t"]="-filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24t:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
-  ["r24null"]=""
+  [r24b1]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24b1:0:0[fg];[bg][fg]overlay=0:0"
+  [r24b2]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24b2:0:0[fg];[bg][fg]overlay=0:0"
+  [r24b1t]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24t-$r24b1:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
+  [r24b2t]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24t-$r24b2:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
+  [r24t]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24t:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
+  [r24null]="-pix_fmt yuv420p"
   )
 
 FolderConverted="converted"
@@ -37,16 +37,16 @@ ls -1 *.{mkv,mp4,ts} 2>/dev/null | while read InFile
 	fName=$(echo "$InFile" | awk -F'-' '{print $2}' | awk -F'.' '{print $1}')
 	if [[ ${FILTER[$fName]+_} ]] 
 	  then
-		Filter=${FILTER["$fName"]}
+		Filter=${FILTER[$fName]}
 		echo "$Filter"
 		ffmpeg -nostdin -hide_banner -i "$InFile" $Filter -vcodec huffyuv -acodec copy -y "$FolderConverted/$InFile"
 		echo "ffmpeg exit code = $?"
 		if [[ $? == 0 ]]
-          then
+		  then
 			test -d "$FolderSources" || mkdir -p "$FolderSources"
 			mv "$InFile" "$FolderSources/$InFile"
-          fi
-	  else
-		echo "Нет такого фильтра: $fName, файл $InFile" | tee -a ff-loop.log
-	  fi
+		  fi
+	else
+	  echo "Нет такого фильтра: $fName, файл $InFile" | tee -a ff-loop.log
+	fi
   done
