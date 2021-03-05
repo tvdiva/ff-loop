@@ -7,25 +7,33 @@
 # NN-FILTER_NAME.mkv
 # "FILTER_NAME" должно быть между символами "-" и "." и соответствовать одному из ключей в хеше FILTER
 
-Blur="7"	# Степень размытия
-r24t="54"	# "Россия 24". Отступ сверху
-r24b1="44"	# "Россия 24". Отступ снизу одинарный
-r24b2="68"	# "Россия 24". Отступ снизу двойной
+# r24b1			"Россия 24". Размытие, одинарная полоса снизу
+# r24b2			"Россия 24". Размытие, двойная полоса снизу
+# r24b1t		"Россия 24". Размытие, одинарная полоса снизу и полоса сверху
+# r24b2t		"Россия 24". Размытие, двойная полоса снизу и полоса сверху
+# r24t			"Россия 24". Размытие, полоса сверху
+# r24null   	"Россия 24", Без фильтров
+# c1news_l		"Первый канал HD, новости"
+# c1news_null	"Первый канал HD, новости". Без фильтров
 
-# r24b1		"Россия 24". Размытие, одинарная полоса снизу
-# r24b2		"Россия 24". Размытие, двойная полоса снизу
-# r24b1t	"Россия 24". Размытие, одинарная полоса снизу и полоса сверху
-# r24b2t	"Россия 24". Размытие, двойная полоса снизу и полоса сверху
-# r24t		"Россия 24". Размытие, полоса сверху
-# r24null   "Россия 24", Без фильтров
+r24Blur="7"		# "Россия 24". Степень размытия
+r24t="54"		# "Россия 24". Отступ сверху
+r24b1="44"		# "Россия 24". Отступ снизу одинарный
+r24b2="68"		# "Россия 24". Отступ снизу двойной
+
+c1Blur="15"				# Первый HD. Степень размытия
+c1news_lc="1562:56"		# Первый HD, новости. Координаты полосы
+c1news_ls="358:978"		# Первый HD, новости. Размер полосы
 
 declare -A FILTER=(
-  [r24b1]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24b1:0:0[fg];[bg][fg]overlay=0:0"
-  [r24b2]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24b2:0:0[fg];[bg][fg]overlay=0:0"
-  [r24b1t]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24t-$r24b1:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
-  [r24b2t]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24t-$r24b2:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
-  [r24t]="-pix_fmt yuv420p -filter_complex [0:v]boxblur=$Blur[bg];[0:v]crop=iw:ih-$r24t:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
-  [r24null]="-pix_fmt yuv420p"
+  [r24b1]="-pix_fmt yuv422p -filter_complex [0:v]boxblur=$r24Blur[bg];[0:v]crop=iw:ih-$r24b1:0:0[fg];[bg][fg]overlay=0:0"
+  [r24b2]="-pix_fmt yuv422p -filter_complex [0:v]boxblur=$r24Blur[bg];[0:v]crop=iw:ih-$r24b2:0:0[fg];[bg][fg]overlay=0:0"
+  [r24b1t]="-pix_fmt yuv422p -filter_complex [0:v]boxblur=$r24Blur[bg];[0:v]crop=iw:ih-$r24t-$r24b1:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
+  [r24b2t]="-pix_fmt yuv422p -filter_complex [0:v]boxblur=$r24Blur[bg];[0:v]crop=iw:ih-$r24t-$r24b2:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
+  [r24t]="-pix_fmt yuv422p -filter_complex [0:v]boxblur=$r24Blur[bg];[0:v]crop=iw:ih-$r24t:0:$r24t[fg];[bg][fg]overlay=0:$r24t"
+  [r24null]="-pix_fmt yuv422p"
+  [c1news_l]="-pix_fmt yuv422p -filter_complex [0:v]crop=$c1news_lc:$c1news_ls,boxblur=$c1Blur[fg];[0:v][fg]overlay=$c1news_ls[v] -map [v] -map 0:a"
+  [c1news_null]="-pix_fmt yuv422p"
   )
 
 FolderConverted="converted"
@@ -39,7 +47,7 @@ ls -1 *.{mkv,mp4,ts} 2>/dev/null | while read InFile
 	  then
 		Filter=${FILTER[$fName]}
 		echo "$Filter"
-		ffmpeg -nostdin -hide_banner -i "$InFile" $Filter -vcodec huffyuv -acodec copy -y "$FolderConverted/$InFile"
+		ffmpeg -nostdin -hide_banner -i "$InFile" $Filter -c:v huffyuv -c:a copy -y "$FolderConverted/$InFile"
 		echo "ffmpeg exit code = $?"
 		if [[ $? == 0 ]]
 		  then
