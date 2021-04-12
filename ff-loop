@@ -15,21 +15,22 @@
 # r24t			"Россия 24". Размытие, полоса сверху
 # r24null   	"Россия 24", Без фильтров
 
-# "Первый канал HD, SAT, 1920x1080
+# "Первый канал" HD, SAT, 1920x1080
 # c1l			Новости
 # c1w			Полоса погоды в новостях
 # c1null		Новости. Без фильтров
 
-# "Россия 1 HD, SAT, 1920x1080
+# "Россия 1" HD, SAT, 1920x1080
 # r1hdl			Новости
+# r1hdm			Утро
 # r1hdnull		Новости. Без фильтров
 
-# "Мир 24 HD, OF, 1920x1080
+# "Мир 24" HD, OF, 1920x1080
 # m24l			Обрезка сверху, снизу, справа, слева (самая удалённая сцена), апскейл до 1920x1080
 # m24c1			Одинарная обрезка снизу, обрезка справа и слева, апскейл до 1920x1080
 # m24c2			Двойная обрезка снизу, обрезка справа и слева, апскейл до 1920x1080
 
-# "Звезда HD, OF, 1920x1080
+# "Звезда" HD, OF, 1920x1080
 # zl			Новости
 # znull			Без фильтров
 
@@ -45,14 +46,18 @@ c1wc="202:904"		# Первый HD, новости. Координаты поло
 c1ws="1516:72"		# Первый HD, новости. Размер полосы погоды
 
 r1hdBlur="25"		# Россия 1 HD. Степень размытия
-r1hdlc="142:973"	# Россия 1 HD, новости. Координаты полосы
-r1hdls="1643:54"	# Россия 1 HD, новости. Размер полосы
+r1hdlc="142:972"	# Россия 1 HD, новости. Координаты полосы
+r1hdls="1643:55"	# Россия 1 HD, новости. Размер полосы
+r1hdmc="141:967"	# Россия 1 HD, Утро. Координаты полосы
+r1hdms="1646:66"	# Россия 1 HD, Утро. Размер полосы
 
 zBlur="25"			# Звезда HD. Степень размытия
 zc="92:966"			# Звезда HD, новости. Координаты полосы
 zs="1744:62"		# Звезда HD, новости. Размер полосы
 
 yuv422="-pix_fmt yuv422p"
+
+#  [r1hdl]="$yuv422 -filter_complex [0:v]crop=$r1hdls:$r1hdlc,boxblur=$r1hdBlur[fg];[0:v][fg]overlay=$r1hdlc[v] -map [v] -map 0:a"
 
 declare -A FILTER=(
   [r24b1]="$yuv422 -filter_complex [0:v]boxblur=$r24Blur[bg];[0:v]crop=iw:ih-$r24b1:0:0[fg];[bg][fg]overlay=0:0"
@@ -64,7 +69,8 @@ declare -A FILTER=(
   [c1l]="$yuv422 -filter_complex [0:v]crop=$c1ls:$c1lc,boxblur=$c1Blur[fg];[0:v][fg]overlay=$c1lc[v] -map [v] -map 0:a"
   [c1w]="$yuv422 -filter:v delogo=$c1wc:$c1ws"
   [c1null]="$yuv422"
-  [r1hdl]="$yuv422 -filter_complex [0:v]crop=$r1hdls:$r1hdlc,boxblur=$r1hdBlur[fg];[0:v][fg]overlay=$r1hdlc[v] -map [v] -map 0:a"
+  [r1hdl]="$yuv422 -filter:v delogo=$r1hdlc:$r1hdls"
+  [r1hdm]="$yuv422 -filter:v delogo=$r1hdmc:$r1hdms"
   [r1hdnull]="$yuv422"
   [m24l]="$yuv422 -filter:v crop=1064:598:150:162,scale=1920:1080"
   [m24c1]="$yuv422 -filter:v crop=1712:962:104:0,scale=1920:1080"
